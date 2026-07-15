@@ -60,6 +60,15 @@ jobs:
 
       # Deploy só em push na main (nunca em PR); autentica via OIDC,
       # sem credenciais estáticas no repositório
+      # Step temporário de depuração: mostra os claims não-sensíveis do token
+      - name: Debug claims OIDC
+        if: github.event_name != 'pull_request'
+        run: |
+          payload=$(curl -sS -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=sts.amazonaws.com" | jq -r '.value' | cut -d. -f2)
+          pad=$(( (4 - ${#payload} % 4) % 4 ))
+          printf '%s' "$payload$(printf '=%.0s' $(seq 1 $pad))" | base64 -d | jq '{iss, aud, sub, ref, repository}'
+
       - name: Autenticação AWS (OIDC)
         if: github.event_name != 'pull_request'
         uses: aws-actions/configure-aws-credentials@v4
