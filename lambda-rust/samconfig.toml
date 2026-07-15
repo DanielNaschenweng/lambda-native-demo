@@ -1,0 +1,12 @@
+version = 0.1
+
+[default.deploy.parameters]
+stack_name = "lambda-rust-demo"
+resolve_s3 = true
+s3_prefix = "lambda-rust-demo"
+region = "sa-east-1"
+capabilities = "CAPABILITY_IAM"
+image_repositories = []
+
+[default.global.parameters]
+region = "sa-east-1"

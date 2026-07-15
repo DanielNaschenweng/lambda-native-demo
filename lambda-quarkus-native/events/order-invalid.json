@@ -1,0 +1,18 @@
+{
+  "version": "2.0",
+  "routeKey": "POST /",
+  "rawPath": "/",
+  "headers": {
+    "content-type": "application/json",
+    "x-route-key": "order-created",
+    "x-trace-id": "trace-tdc-002"
+  },
+  "requestContext": {
+    "http": {
+      "method": "POST",
+      "path": "/"
+    }
+  },
+  "body": "{\"order_id\":\"tdc invalido\",\"total\":-10}",
+  "isBase64Encoded": false
+}

@@ -1,0 +1,17 @@
+{
+  "version": "2.0",
+  "routeKey": "POST /",
+  "rawPath": "/",
+  "headers": {
+    "content-type": "application/json",
+    "x-route-key": "rota-que-nao-existe"
+  },
+  "requestContext": {
+    "http": {
+      "method": "POST",
+      "path": "/"
+    }
+  },
+  "body": "{}",
+  "isBase64Encoded": false
+}

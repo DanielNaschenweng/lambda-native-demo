@@ -1,0 +1,19 @@
+{
+  "version": "2.0",
+  "routeKey": "POST /",
+  "rawPath": "/",
+  "headers": {
+    "content-type": "application/json",
+    "x-route-key": "order-created",
+    "x-trace-id": "trace-tdc-001",
+    "x-correlation-id": "corr-tdc-001"
+  },
+  "requestContext": {
+    "http": {
+      "method": "POST",
+      "path": "/"
+    }
+  },
+  "body": "{\"order_id\":\"TDC-2026-001\",\"customer_name\":\"Daniel Naschenweng\",\"total\":149.90}",
+  "isBase64Encoded": false
+}

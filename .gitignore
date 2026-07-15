@@ -1,0 +1,20 @@
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# SO
+.DS_Store
+
+# Claude Code (configuração local)
+.claude/settings.local.json
+
+# Build
+target/
+.aws-sam/
+
+# Resultados de testes de carga (gerados por test/run.sh)
+test/*.csv
+test/*.txt
+test/result_*.json
+test/comparativo-*.md

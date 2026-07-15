@@ -1,0 +1,67 @@
+name: Build e deploy lambda-rust (ARM64)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'lambda-rust/**'
+      - '.github/workflows/build-lambda-rust.yml'
+  pull_request:
+    paths:
+      - 'lambda-rust/**'
+      - '.github/workflows/build-lambda-rust.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-deploy:
+    # Runner ARM64: o cargo compila nativo para aarch64, sem cross-compilation.
+    # Build e deploy no mesmo job para o binário bootstrap não perder o bit de
+    # execução ao transitar como artifact entre runners.
+    runs-on: ubuntu-24.04-arm
+    permissions:
+      contents: read
+      id-token: write
+    defaults:
+      run:
+        working-directory: lambda-rust
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: lambda-rust
+
+      - name: Instala cargo-lambda e SAM CLI
+        run: |
+          pipx install cargo-lambda
+          pipx install aws-sam-cli
+
+      # --beta-features: o build method rust-cargolambda é beta no SAM CLI
+      - name: Build (cargo-lambda via SAM)
+        run: sam build --beta-features
+
+      - name: Upload do artefato (bootstrap)
+        uses: actions/upload-artifact@v4
+        with:
+          name: lambda-rust-arm64
+          path: lambda-rust/.aws-sam/build/IngressFunction/bootstrap
+          if-no-files-found: error
+
+      # Deploy só em push na main (nunca em PR); autentica via OIDC,
+      # sem credenciais estáticas no repositório
+      - name: Autenticação AWS (OIDC)
+        if: github.event_name != 'pull_request'
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::753167245772:role/github-actions-lambda-native-demo
+          aws-region: sa-east-1
+
+      - name: SAM deploy
+        if: github.event_name != 'pull_request'
+        run: sam deploy --no-confirm-changeset --no-fail-on-empty-changeset

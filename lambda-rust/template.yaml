@@ -1,0 +1,50 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Demo TDC 2026 - Lambda em Rust publicando em SQS
+
+Resources:
+  OrdersQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: orders-queue-rust-sample
+      MessageRetentionPeriod: 3600
+
+  IngressFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: rust-cargolambda
+      BuildProperties:
+        Binary: bootstrap
+    Properties:
+      FunctionName: lambda-rust-ingress
+      Handler: bootstrap
+      Runtime: provided.al2023
+      Architectures:
+        - arm64
+      MemorySize: 256
+      Timeout: 10
+      CodeUri: .
+      Environment:
+        Variables:
+          RUST_LOG: info
+      Policies:
+        - SQSSendMessagePolicy:
+            QueueName: !GetAtt OrdersQueue.QueueName
+        - Statement:
+            - Effect: Allow
+              Action: sqs:GetQueueUrl
+              Resource: !GetAtt OrdersQueue.Arn
+      Events:
+        ApiPost:
+          Type: HttpApi
+          Properties:
+            Path: /
+            Method: POST
+
+Outputs:
+  ApiUrl:
+    Description: Endpoint HTTP da demo
+    Value: !Sub 'https://${ServerlessHttpApi}.execute-api.${AWS::Region}.amazonaws.com/'
+  QueueUrl:
+    Description: URL da fila SQS
+    Value: !Ref OrdersQueue

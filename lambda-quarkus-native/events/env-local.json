@@ -1,0 +1,8 @@
+{
+  "IngressFunction": {
+    "QUARKUS_SQS_ENDPOINT_OVERRIDE": "http://host.docker.internal:4566",
+    "AWS_REGION": "us-east-1",
+    "AWS_ACCESS_KEY_ID": "test",
+    "AWS_SECRET_ACCESS_KEY": "test"
+  }
+}

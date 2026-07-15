@@ -1,0 +1,60 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Lambda Quarkus Nativo - Demo TDC (HTTP -> validacao -> SQS)
+
+Globals:
+  Function:
+    Runtime: provided.al2
+    Architectures:
+      - arm64
+    MemorySize: 256
+    Timeout: 15
+    Environment:
+      Variables:
+        DISABLE_SIGNAL_HANDLERS: 'true'
+
+Resources:
+
+  # ─── Filas SQS ───────────────────────────────────────────────────────────────
+
+  OrdersQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: orders-queue-java-sample
+      MessageRetentionPeriod: 86400
+
+  # ─── HTTP API + Lambda ───────────────────────────────────────────────────────
+
+  IngressHttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties: {}
+
+  IngressFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      FunctionName: lambda-quarkus-native-demo
+      Description: 'Gateway HTTP para SQS em Quarkus Nativo (Demo TDC)'
+      Handler: not.used.in.provided.runtime
+      CodeUri: .
+      PackageType: Zip
+      Events:
+        HttpApiEvent:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref IngressHttpApi
+            Path: /
+            Method: POST
+      Policies:
+        - SQSSendMessagePolicy:
+            QueueName: !GetAtt OrdersQueue.QueueName
+        - Statement:
+            - Effect: Allow
+              Action: sqs:GetQueueUrl
+              Resource: !GetAtt OrdersQueue.Arn
+
+Outputs:
+  ApiUrl:
+    Description: URL do endpoint de ingestão
+    Value: !Sub 'https://${IngressHttpApi}.execute-api.${AWS::Region}.amazonaws.com/'

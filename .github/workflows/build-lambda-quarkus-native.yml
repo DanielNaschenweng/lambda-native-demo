@@ -1,0 +1,82 @@
+name: Build e deploy lambda-quarkus-native (ARM64)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'lambda-quarkus-native/**'
+      - '.github/workflows/build-lambda-quarkus-native.yml'
+  pull_request:
+    paths:
+      - 'lambda-quarkus-native/**'
+      - '.github/workflows/build-lambda-quarkus-native.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-native:
+    # Runner ARM64: o container do Mandrel roda nativo (sem QEMU) e o binário
+    # sai arm64, batendo com a arquitetura declarada no template.yaml
+    runs-on: ubuntu-24.04-arm
+    defaults:
+      run:
+        working-directory: lambda-quarkus-native
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # JDK só para o Maven no host; o native-image roda dentro do container
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Build nativo (Mandrel via container)
+        run: make build-native
+
+      - name: Upload do artefato (function.zip)
+        uses: actions/upload-artifact@v4
+        with:
+          name: lambda-quarkus-native-arm64
+          path: lambda-quarkus-native/target/function.zip
+          if-no-files-found: error
+
+  deploy:
+    # Deploy só em push na main (nunca em PR); autentica na AWS via OIDC,
+    # sem credenciais estáticas no repositório
+    needs: build-native
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    defaults:
+      run:
+        working-directory: lambda-quarkus-native
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download do artefato do build nativo
+        uses: actions/download-artifact@v4
+        with:
+          name: lambda-quarkus-native-arm64
+          path: lambda-quarkus-native/target
+
+      - uses: aws-actions/setup-sam@v2
+        with:
+          use-installer: true
+
+      - name: Autenticação AWS (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::753167245772:role/github-actions-lambda-native-demo
+          aws-region: sa-east-1
+
+      - name: SAM build + deploy
+        run: |
+          sam build
+          sam deploy --no-confirm-changeset --no-fail-on-empty-changeset
