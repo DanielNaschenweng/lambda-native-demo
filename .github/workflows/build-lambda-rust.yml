@@ -33,6 +33,11 @@ jobs:
 
       - uses: dtolnay/rust-toolchain@stable
 
+      # cargo-lambda usa o Zig como linker (cargo-zigbuild), mesmo em host arm64
+      - uses: mlugg/setup-zig@v2
+        with:
+          version: 0.13.0
+
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: lambda-rust
