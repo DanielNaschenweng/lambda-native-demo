@@ -340,8 +340,7 @@ Se você assistiu à palestra e chegou até aqui: obrigado! Esse repositório ex
 
 **Vamos nos conectar:**
 
-- LinkedIn: [SEU_LINKEDIN_AQUI]
-- GitHub: [SEU_GITHUB_AQUI]
-- E-mail: [SEU_EMAIL_AQUI]
+- LinkedIn: https://www.linkedin.com/in/naschenweng
+- GitHub: https://github.com/DanielNaschenweng
 
 Bons builds, e que seus cold starts sejam sempre de milissegundos. 🚀
